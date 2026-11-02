@@ -1,0 +1,36 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E",
+  "deployBlock": 12050077,
+  "chainlinkEthUsdFeed": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+  "contracts": {
+    "CDFxToken": "0x08E659Ff2345340b4eD86fFFd69087F7B0F4E4f2",
+    "CDFxOracle": "0x1CeCf0Fe7C386482c0c959977d2A8597bE37eF32",
+    "VaultManager": "0xfE496BC8dAC320a3393fd409AC26890DF81071Fe",
+    "CDFxFaucet": "0xd62a68960E7c62E2f09CdCE787522f363Fea7f14"
+  },
+  "constructorArguments": {
+    "CDFxToken": [
+      "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E"
+    ],
+    "CDFxOracle": [
+      "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "2800000000000000000000",
+      10800,
+      "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E"
+    ],
+    "VaultManager": [
+      "0x08E659Ff2345340b4eD86fFFd69087F7B0F4E4f2",
+      "0x1CeCf0Fe7C386482c0c959977d2A8597bE37eF32",
+      "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E",
+      "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E"
+    ],
+    "CDFxFaucet": [
+      "0x08E659Ff2345340b4eD86fFFd69087F7B0F4E4f2",
+      "0xD239158db051e43A7bCD41EbB5eF5e2cF3c3C74E",
+      "1000000000000000000000",
+      86400
+    ]
+  }
+}

@@ -1,0 +1,334 @@
+'npx hardhat clean' running (wd: /home/claude/cdfx)
+'npx hardhat clean --global' running (wd: /home/claude/cdfx)
+Problem executing hardhat: ◇ injected env (0) from .env
+◇ injected env (0) from .env
+
+'npx hardhat compile --force' running (wd: /home/claude/cdfx)
+
+Detector: divide-before-multiply
+VaultManager._currentIndex() (contracts/VaultManager.sol#454-459) performs a multiplication on the result of a division:
+	- ratePerSecond = (RAY * stabilityFeeBps) / BPS / SECONDS_PER_YEAR (contracts/VaultManager.sol#457)
+	- debtIndex + (debtIndex * ratePerSecond * dt) / RAY (contracts/VaultManager.sol#458)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Detector: incorrect-equality
+CDFxFaucet.nextClaimAt(address) (contracts/CDFxFaucet.sol#45-48) uses a dangerous strict equality:
+	- last == 0 (contracts/CDFxFaucet.sol#47)
+VaultManager._applyLiquidation(VaultManager.Vault,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#435-452) uses a dangerous strict equality:
+	- v.collateral == 0 && v.normalizedDebt > 0 (contracts/VaultManager.sol#446)
+VaultManager._applyLiquidation(VaultManager.Vault,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#435-452) uses a dangerous strict equality:
+	- repayAmount == debt (contracts/VaultManager.sol#439)
+VaultManager._currentIndex() (contracts/VaultManager.sol#454-459) uses a dangerous strict equality:
+	- dt == 0 || stabilityFeeBps == 0 (contracts/VaultManager.sol#456)
+VaultManager.collateralRatioBps(address) (contracts/VaultManager.sol#329-335) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#332)
+VaultManager.drip() (contracts/VaultManager.sol#245-261) uses a dangerous strict equality:
+	- block.timestamp == lastDrip (contracts/VaultManager.sol#247)
+VaultManager.drip() (contracts/VaultManager.sol#245-261) uses a dangerous strict equality:
+	- newIndex == idx (contracts/VaultManager.sol#250)
+VaultManager.getProtocolStats() (contracts/VaultManager.sol#378-399) uses a dangerous strict equality:
+	- s.totalDebt == 0 (contracts/VaultManager.sol#393-395)
+VaultManager.isLiquidatable(address) (contracts/VaultManager.sol#337-343) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#340)
+VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#207)
+VaultManager.liquidationPrice(address) (contracts/VaultManager.sol#346-352) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#349)
+VaultManager.maxWithdrawable(address) (contracts/VaultManager.sol#368-375) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#371)
+VaultManager.repay(uint256) (contracts/VaultManager.sol#155-173) uses a dangerous strict equality:
+	- debt == 0 (contracts/VaultManager.sol#160)
+VaultManager.repay(uint256) (contracts/VaultManager.sol#155-173) uses a dangerous strict equality:
+	- amount == debt (contracts/VaultManager.sol#163)
+VaultManager.settleBadDebt(uint256) (contracts/VaultManager.sol#228-241) uses a dangerous strict equality:
+	- bad == 0 (contracts/VaultManager.sol#232)
+VaultManager.settleBadDebt(uint256) (contracts/VaultManager.sol#228-241) uses a dangerous strict equality:
+	- amount == bad (contracts/VaultManager.sol#235)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Detector: reentrancy-no-eth
+Reentrancy in VaultManager._mint(address,uint256) (contracts/VaultManager.sol#413-433):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#415)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- totalNormalizedDebt += add (contracts/VaultManager.sol#421)
+	VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63) can be used in cross function reentrancies:
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.totalDebt() (contracts/VaultManager.sol#320-322)
+	- VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63)
+Reentrancy in VaultManager.depositAndMint(uint256) (contracts/VaultManager.sol#143-146):
+	External calls:
+	- _deposit(msg.sender,msg.value) (contracts/VaultManager.sol#144)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	- _mint(msg.sender,mintAmount) (contracts/VaultManager.sol#145)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+		- cdfx.mint(owner,amount) (contracts/VaultManager.sol#432)
+	State variables written after the call(s):
+	- _mint(msg.sender,mintAmount) (contracts/VaultManager.sol#145)
+		- v.normalizedDebt += add (contracts/VaultManager.sol#420)
+	VaultManager._vaults (contracts/VaultManager.sol#60) can be used in cross function reentrancies:
+	- VaultManager.collateralOf(address) (contracts/VaultManager.sol#311-313)
+	- VaultManager.collateralRatioBps(address) (contracts/VaultManager.sol#329-335)
+	- VaultManager.debtOf(address) (contracts/VaultManager.sol#315-317)
+	- VaultManager.getVault(address) (contracts/VaultManager.sol#306-309)
+	- VaultManager.isLiquidatable(address) (contracts/VaultManager.sol#337-343)
+	- VaultManager.liquidationPrice(address) (contracts/VaultManager.sol#346-352)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.maxWithdrawable(address) (contracts/VaultManager.sol#368-375)
+	- _mint(msg.sender,mintAmount) (contracts/VaultManager.sol#145)
+		- debtIndex = newIndex (contracts/VaultManager.sol#253)
+	VaultManager.debtIndex (contracts/VaultManager.sol#65) can be used in cross function reentrancies:
+	- VaultManager._currentIndex() (contracts/VaultManager.sol#454-459)
+	- VaultManager.debtIndex (contracts/VaultManager.sol#65)
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- _mint(msg.sender,mintAmount) (contracts/VaultManager.sol#145)
+		- lastDrip = block.timestamp (contracts/VaultManager.sol#249)
+	VaultManager.lastDrip (contracts/VaultManager.sol#66) can be used in cross function reentrancies:
+	- VaultManager._currentIndex() (contracts/VaultManager.sol#454-459)
+	- VaultManager.constructor(CDFxToken,CDFxOracle,address,address) (contracts/VaultManager.sol#113-133)
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.lastDrip (contracts/VaultManager.sol#66)
+	- _mint(msg.sender,mintAmount) (contracts/VaultManager.sol#145)
+		- totalNormalizedDebt += add (contracts/VaultManager.sol#421)
+	VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63) can be used in cross function reentrancies:
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.totalDebt() (contracts/VaultManager.sol#320-322)
+	- VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63)
+Reentrancy in VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#204)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- badDebtCreated = _applyLiquidation(v,repayAmount,debt,idx,seized) (contracts/VaultManager.sol#216)
+		- totalNormalizedDebt -= sub (contracts/VaultManager.sol#444)
+	VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63) can be used in cross function reentrancies:
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.totalDebt() (contracts/VaultManager.sol#320-322)
+	- VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63)
+Reentrancy in VaultManager.repay(uint256) (contracts/VaultManager.sol#155-173):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#157)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- totalNormalizedDebt -= sub (contracts/VaultManager.sol#165)
+	VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63) can be used in cross function reentrancies:
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.totalDebt() (contracts/VaultManager.sol#320-322)
+	- VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63)
+Reentrancy in VaultManager.setRiskParameters(uint256,uint256,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#265-287):
+	External calls:
+	- drip() (contracts/VaultManager.sol#279)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- stabilityFeeBps = feeBps (contracts/VaultManager.sol#283)
+	VaultManager.stabilityFeeBps (contracts/VaultManager.sol#68) can be used in cross function reentrancies:
+	- VaultManager._currentIndex() (contracts/VaultManager.sol#454-459)
+	- VaultManager.constructor(CDFxToken,CDFxOracle,address,address) (contracts/VaultManager.sol#113-133)
+	- VaultManager.getProtocolStats() (contracts/VaultManager.sol#378-399)
+	- VaultManager.setRiskParameters(uint256,uint256,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#265-287)
+	- VaultManager.stabilityFeeBps (contracts/VaultManager.sol#68)
+Reentrancy in VaultManager.setTreasury(address) (contracts/VaultManager.sol#289-293):
+	External calls:
+	- drip() (contracts/VaultManager.sol#290)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- treasury = newTreasury (contracts/VaultManager.sol#292)
+	VaultManager.treasury (contracts/VaultManager.sol#74) can be used in cross function reentrancies:
+	- VaultManager.constructor(CDFxToken,CDFxOracle,address,address) (contracts/VaultManager.sol#113-133)
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.setTreasury(address) (contracts/VaultManager.sol#289-293)
+	- VaultManager.treasury (contracts/VaultManager.sol#74)
+Reentrancy in VaultManager.settleBadDebt(uint256) (contracts/VaultManager.sol#228-241):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#230)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- totalNormalizedDebt -= sub (contracts/VaultManager.sol#237)
+	VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63) can be used in cross function reentrancies:
+	- VaultManager.drip() (contracts/VaultManager.sol#245-261)
+	- VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365)
+	- VaultManager.totalDebt() (contracts/VaultManager.sol#320-322)
+	- VaultManager.totalNormalizedDebt (contracts/VaultManager.sol#63)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Detector: unused-return
+CDFxOracle.ethUsd() (contracts/CDFxOracle.sol#86-95) ignores return value by (roundId,answer,None,updated,answeredInRound) = ethUsdFeed.latestRoundData() (contracts/CDFxOracle.sol#87)
+VaultManager.withdrawCollateral(uint256) (contracts/VaultManager.sol#176-196) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#188)
+VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#209)
+VaultManager.collateralRatioBps(address) (contracts/VaultManager.sol#329-335) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#333)
+VaultManager.isLiquidatable(address) (contracts/VaultManager.sol#337-343) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#341)
+VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#359)
+VaultManager.maxWithdrawable(address) (contracts/VaultManager.sol#368-375) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#372)
+VaultManager.getProtocolStats() (contracts/VaultManager.sol#378-399) ignores return value by (price) = oracle.ethPriceCdf() (contracts/VaultManager.sol#390-398)
+VaultManager._mint(address,uint256) (contracts/VaultManager.sol#413-433) ignores return value by (price,None) = oracle.ethPriceCdf() (contracts/VaultManager.sol#427)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Detector: missing-zero-check
+VaultManager.constructor(CDFxToken,CDFxOracle,address,address).treasury_ (contracts/VaultManager.sol#113) lacks a zero-check on :
+		- treasury = treasury_ (contracts/VaultManager.sol#119)
+VaultManager.setTreasury(address).newTreasury (contracts/VaultManager.sol#289) lacks a zero-check on :
+		- treasury = newTreasury (contracts/VaultManager.sol#292)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Detector: reentrancy-benign
+Reentrancy in VaultManager._deposit(address,uint256) (contracts/VaultManager.sol#403-411):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#405)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- v.collateral += amount (contracts/VaultManager.sol#407)
+	- totalCollateral += amount (contracts/VaultManager.sol#408)
+Reentrancy in VaultManager._mint(address,uint256) (contracts/VaultManager.sol#413-433):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#415)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- v.normalizedDebt += add (contracts/VaultManager.sol#420)
+Reentrancy in VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#204)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- badDebtCreated = _applyLiquidation(v,repayAmount,debt,idx,seized) (contracts/VaultManager.sol#216)
+		- v.collateral -= seized (contracts/VaultManager.sol#440)
+		- v.normalizedDebt -= sub (contracts/VaultManager.sol#442)
+		- v.normalizedDebt = 0 (contracts/VaultManager.sol#450)
+	- badDebtCreated = _applyLiquidation(v,repayAmount,debt,idx,seized) (contracts/VaultManager.sol#216)
+		- badDebtNormalized += v.normalizedDebt (contracts/VaultManager.sol#448)
+	- badDebtCreated = _applyLiquidation(v,repayAmount,debt,idx,seized) (contracts/VaultManager.sol#216)
+		- totalCollateral -= seized (contracts/VaultManager.sol#441)
+Reentrancy in VaultManager.repay(uint256) (contracts/VaultManager.sol#155-173):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#157)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- v.normalizedDebt -= sub (contracts/VaultManager.sol#164)
+Reentrancy in VaultManager.setRiskParameters(uint256,uint256,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#265-287):
+	External calls:
+	- drip() (contracts/VaultManager.sol#279)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- debtCeiling = ceiling (contracts/VaultManager.sol#284)
+	- liquidationPenaltyBps = penaltyBps (contracts/VaultManager.sol#282)
+	- liquidationRatioBps = liqRatioBps (contracts/VaultManager.sol#281)
+	- minCollateralRatioBps = minRatioBps (contracts/VaultManager.sol#280)
+	- minDebt = minDebt_ (contracts/VaultManager.sol#285)
+Reentrancy in VaultManager.settleBadDebt(uint256) (contracts/VaultManager.sol#228-241):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#230)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- badDebtNormalized -= sub (contracts/VaultManager.sol#236)
+Reentrancy in VaultManager.withdrawCollateral(uint256) (contracts/VaultManager.sol#176-196):
+	External calls:
+	- idx = drip() (contracts/VaultManager.sol#178)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	State variables written after the call(s):
+	- v.collateral -= amount (contracts/VaultManager.sol#183)
+	- totalCollateral -= amount (contracts/VaultManager.sol#184)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Detector: reentrancy-events
+Reentrancy in VaultManager.setRiskParameters(uint256,uint256,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#265-287):
+	External calls:
+	- drip() (contracts/VaultManager.sol#279)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	Event emitted after the call(s):
+	- RiskParametersUpdated(minRatioBps,liqRatioBps,penaltyBps,feeBps,ceiling,minDebt_) (contracts/VaultManager.sol#286)
+Reentrancy in VaultManager.setTreasury(address) (contracts/VaultManager.sol#289-293):
+	External calls:
+	- drip() (contracts/VaultManager.sol#290)
+		- cdfx.mint(treasury,feeMinted) (contracts/VaultManager.sol#260)
+	Event emitted after the call(s):
+	- TreasuryUpdated(treasury,newTreasury) (contracts/VaultManager.sol#291)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Detector: timestamp
+CDFxFaucet.claim() (contracts/CDFxFaucet.sol#35-43) uses timestamp for comparisons
+	Dangerous comparisons:
+	- last != 0 && block.timestamp < last + cooldown (contracts/CDFxFaucet.sol#37)
+CDFxFaucet.nextClaimAt(address) (contracts/CDFxFaucet.sol#45-48) uses timestamp for comparisons
+	Dangerous comparisons:
+	- last == 0 (contracts/CDFxFaucet.sol#47)
+CDFxOracle.ethUsd() (contracts/CDFxOracle.sol#86-95) uses timestamp for comparisons
+	Dangerous comparisons:
+	- answer <= 0 || updated == 0 || updated > block.timestamp || answeredInRound < roundId (contracts/CDFxOracle.sol#88)
+	- block.timestamp - updated > maxFeedAge (contracts/CDFxOracle.sol#91)
+VaultManager.repay(uint256) (contracts/VaultManager.sol#155-173) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (contracts/VaultManager.sol#156)
+	- debt == 0 (contracts/VaultManager.sol#160)
+	- amount > debt (contracts/VaultManager.sol#161)
+	- remaining != 0 && remaining < minDebt (contracts/VaultManager.sol#168)
+	- amount == debt (contracts/VaultManager.sol#163)
+VaultManager.withdrawCollateral(uint256) (contracts/VaultManager.sol#176-196) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt > 0 (contracts/VaultManager.sol#187)
+VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225) uses timestamp for comparisons
+	Dangerous comparisons:
+	- repayAmount == 0 (contracts/VaultManager.sol#203)
+	- debt == 0 (contracts/VaultManager.sol#207)
+	- repayAmount > debt (contracts/VaultManager.sol#212)
+	- seized > v.collateral (contracts/VaultManager.sol#214)
+	- seized > 0 (contracts/VaultManager.sol#221)
+VaultManager.settleBadDebt(uint256) (contracts/VaultManager.sol#228-241) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (contracts/VaultManager.sol#229)
+	- bad == 0 (contracts/VaultManager.sol#232)
+	- amount > bad (contracts/VaultManager.sol#233)
+	- amount == bad (contracts/VaultManager.sol#235)
+VaultManager.drip() (contracts/VaultManager.sol#245-261) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp == lastDrip (contracts/VaultManager.sol#247)
+	- newIndex == idx (contracts/VaultManager.sol#250)
+	- treasury != address(0) && totalNormalizedDebt > 0 (contracts/VaultManager.sol#255)
+	- feeMinted > 0 (contracts/VaultManager.sol#260)
+VaultManager.collateralRatioBps(address) (contracts/VaultManager.sol#329-335) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt == 0 (contracts/VaultManager.sol#332)
+VaultManager.isLiquidatable(address) (contracts/VaultManager.sol#337-343) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt == 0 (contracts/VaultManager.sol#340)
+VaultManager.liquidationPrice(address) (contracts/VaultManager.sol#346-352) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt == 0 (contracts/VaultManager.sol#349)
+VaultManager.maxMintable(address) (contracts/VaultManager.sol#355-365) uses timestamp for comparisons
+	Dangerous comparisons:
+	- maxDebt > debt (contracts/VaultManager.sol#361)
+	- debtCeiling > total (contracts/VaultManager.sol#363)
+	- room < ceilingRoom (contracts/VaultManager.sol#364)
+VaultManager.maxWithdrawable(address) (contracts/VaultManager.sol#368-375) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt == 0 (contracts/VaultManager.sol#371)
+	- v.collateral > required (contracts/VaultManager.sol#374)
+VaultManager.getProtocolStats() (contracts/VaultManager.sol#378-399) uses timestamp for comparisons
+	Dangerous comparisons:
+	- s.totalDebt == 0 (contracts/VaultManager.sol#393-395)
+VaultManager._mint(address,uint256) (contracts/VaultManager.sol#413-433) uses timestamp for comparisons
+	Dangerous comparisons:
+	- debt < minDebt (contracts/VaultManager.sol#424)
+	- Math.mulDiv(totalNormalizedDebt,idx,RAY) > debtCeiling (contracts/VaultManager.sol#425)
+VaultManager._applyLiquidation(VaultManager.Vault,uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#435-452) uses timestamp for comparisons
+	Dangerous comparisons:
+	- v.collateral == 0 && v.normalizedDebt > 0 (contracts/VaultManager.sol#446)
+	- repayAmount == debt (contracts/VaultManager.sol#439)
+VaultManager._currentIndex() (contracts/VaultManager.sol#454-459) uses timestamp for comparisons
+	Dangerous comparisons:
+	- dt == 0 || stabilityFeeBps == 0 (contracts/VaultManager.sol#456)
+VaultManager._isHealthy(uint256,uint256,uint256,uint256) (contracts/VaultManager.sol#466-472) uses timestamp for comparisons
+	Dangerous comparisons:
+	- Math.mulDiv(collateral,price,WAD) * BPS >= debt * ratioBps (contracts/VaultManager.sol#471)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in VaultManager.withdrawCollateral(uint256) (contracts/VaultManager.sol#176-196):
+	- (ok,None) = msg.sender.call{value: amount}() (contracts/VaultManager.sol#194)
+Low level call in VaultManager.liquidate(address,uint256) (contracts/VaultManager.sol#202-225):
+	- (ok,None) = msg.sender.call{value: seized}() (contracts/VaultManager.sol#222)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+. analyzed (28 contracts with 102 detectors), 64 result(s) found
